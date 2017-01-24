@@ -31,6 +31,8 @@ private:
   
 
   void waitForConnection();
+  void waitForCommand();
+  char* executeCommand(char* command);
 };
 
 #endif
