@@ -4,6 +4,7 @@
 #define BD_SERVER_H
 
 #define DEFAULT_PORTNO 2737
+#define MAX_PATH 32768
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,7 @@ private:
   void waitForConnection();
   void waitForCommand();
   char* executeCommand(char* command);
+  void resetConnection();
 };
 
 #endif

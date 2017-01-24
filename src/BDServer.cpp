@@ -52,7 +52,7 @@ void BDServer :: waitForConnection(){
   char buffer[1024];
   
   if (_ServerSocket > 0){
-    if(listen(_ServerSocket, 5) == 0){
+    if(listen(_ServerSocket, 1) == 0){
       printf("Listening\n");
     }
 
@@ -60,7 +60,8 @@ void BDServer :: waitForConnection(){
     _AddrSize = sizeof _ServerStorage;
     _ClientSocket = accept(_ServerSocket, (struct sockaddr *) &_ServerStorage, &_AddrSize);
 
-    //ideally tcp handshake will happen here
+    printf("Client connected. Handshaking.\n");
+    
     strcpy(buffer, "Server: Connected.\n");
     write(_ClientSocket, buffer, 40);
     //once a conncetion has been made, wait for a command
@@ -79,12 +80,19 @@ void BDServer :: waitForConnection(){
 void BDServer :: waitForCommand()
 {
   int amountRead;
-  char buffer[256];
+  char buffer[MAX_PATH];
+  
+  printf("Waiting for command...\n");
   amountRead = read(_ClientSocket, buffer, 255);
-  while(strcmp(buffer, "end_session") != 0){
+  while(amountRead != -1 && amountRead != 0 && strncmp(buffer, "end_session", (int)strlen(buffer) - 1) != 0){
     executeCommand(buffer);
+    printf("Waiting for command...\n");
     amountRead = read(_ClientSocket, buffer, 255);
   }
+
+  printf("Client disconnected. Resetting client socket.\n");
+  resetConnection();
+  waitForConnection();
 }
 
 /*
@@ -96,8 +104,33 @@ void BDServer :: waitForCommand()
  */
 char* BDServer :: executeCommand(char* command)
 {
+  FILE *fp;
+  char path[MAX_PATH];
+  char *output = (char*)malloc(MAX_PATH * sizeof(char));
+  
   printf("%s\n", command);
+
+  fp = popen(command, "r");
+  if(fp != NULL){
+    while(fgets(path, sizeof(path) -1, fp) != NULL){
+      printf("%s", path);
+    }
+  }else{
+    output[0] = '-';
+    output[1] = '1';
+    output[2] = '\0';
+  }
+
+  return output;
 }
+
+
+void BDServer :: resetConnection(){
+  close(_ClientSocket);
+
+  _ClientSocket = 0;
+}
+
 
 /* Getters/Setters */
 void BDServer :: setPort(int port){

@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
   char *buffer;
 
 
-  buffer = (char *)malloc(bufferSize * sizeof(char));
+  buffer = (char *)malloc(bufferSize * sizeof(char) + 1 * sizeof(char));
   
   portno = atoi(argv[2]);
 
@@ -49,12 +49,13 @@ int main(int argc, char *argv[]){
 
   printf("Enter command: ");
   amountRead = getline(&buffer, &bufferSize, stdin);
-  while (strcmp("end_session", buffer) != 0){
-      write(sockfd, buffer, 255);
-      //n = read(sockfd, buffer, 255);
-      printf("%s\n", buffer);
+
+  while (strncmp("end_session", buffer, (int)strlen(buffer) - 1) != 0){
+      write(sockfd, buffer, amountRead);
       amountRead = getline(&buffer, &bufferSize, stdin);
   }
 
-  
+  write(sockfd, buffer, amountRead);
+
+    
 }
