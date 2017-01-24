@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <iostream>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-using namespace std;
-
 #include "BDServer.h"
 
 BDServer :: BDServer(){
@@ -21,6 +12,38 @@ BDServer :: BDServer(int portNo){
 
 void BDServer :: startServer(){
   //TODO implement
+
+  waitForConnection();
+  
+  _ServerSocket = socket(PF_INET, SOCK_STREAM, 0);
+  _ServerAddress.sin_family = AF_INET;
+  _ServerAddress.sin_port = _PortNo;
+  _ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+  memset(_ServerAddress.sin_zero, '\0', sizeof _ServerAddress.sin_zero);
+  
+  bind(_ServerSocket, (struct sockaddr *) &_ServerAddress, sizeof(_ServerAddress));
+
+  waitForConnection();
+}
+
+void BDServer :: waitForConnection(){
+  char buffer[1024];
+  
+  if (0 != _ServerSocket){
+    if(listen(_ServerSocket, 5) == 0){
+      printf("Listening\n");
+    }
+
+    /* accept call creates a new socket for incomming connection */
+    _AddrSize = sizeof _ServerStorage;
+    _ClientSocket = accept(_ServerSocket, (struct sockaddr *) &_ServerStorage, &_AddrSize);
+
+    strcpy(buffer, "Hello World!\n");
+    send(_ClientSocket, buffer, 13, 0);
+  
+  }else{
+    printf("Initialize server socket first ya dunce");
+  }
 }
 
 void BDServer :: setPort(int port){

@@ -5,6 +5,13 @@
 
 #define DEFAULT_PORTNO 2737
 
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+using namespace std;
+
 class BDServer{
 public:
   BDServer();
@@ -14,9 +21,16 @@ public:
   void setPort(int);
   
 private:
-  int _SocketFd;
-  int _AcceptSockFd;
+  int _ServerSocket;
+  int _ClientSocket;
   int _PortNo;
+
+  struct sockaddr_in _ServerAddress;
+  struct sockaddr_storage _ServerStorage;
+  socklen_t _AddrSize;
+  
+
+  void waitForConnection();
 };
 
 #endif
