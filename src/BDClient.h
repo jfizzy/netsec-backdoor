@@ -9,3 +9,6 @@
 #include <netdb.h>
 
 using namespace std;
+
+
+void menu();
