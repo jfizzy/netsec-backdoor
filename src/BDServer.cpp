@@ -39,7 +39,7 @@ void BDServer :: startServer(){
 
   _ServerSocket = socket(PF_INET, SOCK_STREAM, 0);
   _ServerAddress.sin_family = AF_INET;
-  _ServerAddress.sin_port = _PortNo;
+  _ServerAddress.sin_port = htons(_PortNo);
   _ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(_ServerAddress.sin_zero, '\0', sizeof _ServerAddress.sin_zero);
   
@@ -61,9 +61,8 @@ void BDServer :: waitForConnection(){
     _ClientSocket = accept(_ServerSocket, (struct sockaddr *) &_ServerStorage, &_AddrSize);
 
     //ideally tcp handshake will happen here
-    strcpy(buffer, "Hello World!\n");
-    send(_ClientSocket, buffer, 13, 0);
-
+    strcpy(buffer, "Server: Connected.\n");
+    write(_ClientSocket, buffer, 40);
     //once a conncetion has been made, wait for a command
     waitForCommand();
   }else{
@@ -79,22 +78,28 @@ void BDServer :: waitForConnection(){
  */
 void BDServer :: waitForCommand()
 {
-  
+  int amountRead;
+  char buffer[256];
+  amountRead = read(_ClientSocket, buffer, 255);
+  while(strcmp(buffer, "end_session") != 0){
+    executeCommand(buffer);
+    amountRead = read(_ClientSocket, buffer, 255);
+  }
 }
 
 /*
   executeCommand
 
-  executeCommand
+  executeCommand takes in a command and executes it and redirects the output
+  of the response so that the output can be sent to the client socket.
 
  */
 char* BDServer :: executeCommand(char* command)
 {
-  
+  printf("%s\n", command);
 }
 
-
-
+/* Getters/Setters */
 void BDServer :: setPort(int port){
   if(port > 256 && port <= 65535){
     _PortNo = port;

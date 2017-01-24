@@ -6,10 +6,13 @@
 #define DEFAULT_PORTNO 2737
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 using namespace std;
 
 class BDServer{
