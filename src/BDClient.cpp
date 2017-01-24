@@ -2,39 +2,54 @@
 
 
 int main(int argc, char* argv[])
-{
-	for(int i = 0; i < argc; i++) 
-		cout << "argv[" << i << "] = " << argv[i] << endl; 
+{ 
+	cout << "Welcome to the cool Backdoor client...\n";
+	int sockfd, n;
+	struct sockaddr_in serv_addr;
+	struct hostent *server;
+	size_t bufferSize = 1024;
+	size_t amountRead;
 
-	cout << "Welcome to the cool BDClient...\n";
-	int client_sock;
-	char buffer[1024];
-	struct sockaddr_in server_addr;
-	socklen_t addr_size;
+	char *buffer;
 
-	printf("Configuration: ip = [%s], port = [%s]\n", argv[0], argv[1]);
+	buffer = (char *)malloc(bufferSize * sizeof(char));
+
+	printf("Configuration: ip = [%s], port = [%s]\n", argv[1], argv[2]);
 
 	//create the socket
 	//args: inet domain, stream sock, default protocol (tcp here)
-	client_sock = socket(PF_INET, SOCK_STREAM, 0);
+	sockfd = socket(PF_INET, SOCK_STREAM, 0);
 
-	//config server address struct settings
-	server_addr.sin_family = AF_INET;
-	//port num. using htons func to use proper byte order 	
-	server_addr.sin_port = htons(stoi(argv[2]));
-	//IP of localhost
-	server_addr.sin_addr.s_addr = inet_addr(argv[1]);
-	//set all padding bits to 0
-	memset(server_addr.sin_zero, '\0', sizeof server_addr.sin_zero);
-
-	//conn the sock to the server using configed addr struct
-	addr_size = sizeof server_addr;
-	connect(client_sock, (struct sockaddr *) &server_addr, addr_size);
+	if (sockfd < 0 ){
+		printf("Oh No!!!!!\n");
+	}
 	
-	//read msg from server into buffer
-	recv(client_sock, buffer, 1024, 0);
+	server = gethostbyname(argv[1]);
+	if(server == NULL){
+		fprintf(stderr, "ERROR, no such host\n");
+	}
 
-	//print the recv msg
-	printf("Response from server: %s", buffer);
-	return  0;
+	bzero((char *) &serv_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	bcopy((char *)server->h_addr,
+		(char *)&serv_addr.sin_addr.s_addr,
+		server->h_length);
+	serv_addr.sin_port = htons(stoi(argv[2]));
+	if(connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0){
+	fprintf(stderr, "ERROR connecting\n");
+	}
+
+	n=read(sockfd, buffer, 1023);
+	printf("%s\n", buffer);
+
+	printf("Enter command: ");
+	amountRead = getline(&buffer, &bufferSize, stdin);
+	
+	while (strncmp("end_session", buffer, (int)strlen(buffer)-1) != 0){
+		write(sockfd, buffer, 1023);
+		//n = read(sockfd, buffer, 1023);
+		printf("%s\n", buffer);
+		amountRead = getline(&buffer, &bufferSize, stdin);
+	}
+	
 }
