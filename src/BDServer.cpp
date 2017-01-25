@@ -2,7 +2,7 @@
 
 /*
   Default constructor, initiates a default port number
- */
+*/
 BDServer :: BDServer(){
   _PortNo = DEFAULT_PORTNO;
 
@@ -16,7 +16,7 @@ BDServer :: BDServer(){
   port number as long as the port number falls in a valid range.
 
   Otherwise, default port is specified.
- */
+*/
 BDServer :: BDServer(int portNo){
   if(portNo > 256 && portNo <= 65535){
     _PortNo = portNo;
@@ -34,7 +34,7 @@ BDServer :: BDServer(int portNo){
   startServer
 
   initializes the server socket then waits for a connection
- */
+*/
 void BDServer :: startServer(){
 
   _ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -63,7 +63,7 @@ void BDServer :: waitForConnection(){
     printf("Client connected. Handshaking.\n");
 
     strcpy(buffer, "Server: Connected.\n");
-    write(_ClientSocket, buffer, 40);
+    write(_ClientSocket, buffer, strlen(buffer));
     //once a conncetion has been made, wait for a command
     waitForCommand();
   }else{
@@ -76,19 +76,32 @@ void BDServer :: waitForConnection(){
 
   waitForCommand assumes that a TCP connection has been made to a client.
   It then waits for a command to be sent from the client to parse
- */
+*/
 void BDServer :: waitForCommand()
 {
   int amountRead;
   char buffer[MAX_PATH];
   
   printf("Waiting for command...\n");
-  amountRead = read(_ClientSocket, buffer, 255);
-  while(amountRead != -1 && amountRead != 0 && strncmp(buffer, "end_session", (int)strlen(buffer) - 1) != 0){
-    executeCommand(buffer);
-    memset(buffer, 0, 256);
-    printf("Waiting for command...\n");
-    amountRead = read(_ClientSocket, buffer, 255);
+  amountRead = read(_ClientSocket, buffer, MAX_PATH);
+  while(amountRead > 0){    
+    if (amountRead == 1){
+      try{
+	memcpy(buffer, "Empty command\n", 14);
+	write(_ClientSocket, buffer, 14);
+      }catch(const std::exception& e){
+	break;
+      }
+    }else if(strncmp(buffer, "off", (int)strlen(buffer) - 1) == 0){
+      memcpy(buffer, "Shutting down.\n", 15);
+      write(_ClientSocket, buffer, 14);
+      return;
+    }else{
+      executeCommand(buffer);
+      printf("Waiting for command...\n");
+    }
+    memset(buffer, 0, MAX_PATH);
+    amountRead = read(_ClientSocket, buffer, MAX_PATH);
   }
 
   printf("Client disconnected. Resetting client socket.\n");
@@ -97,19 +110,42 @@ void BDServer :: waitForCommand()
 }
 
 /*
+  parseCommand
+
+  parses commannds
+*/
+
+void BDServer :: parseCommand(char* command){
+  /* todo 
+     pwd
+     cd <dir>
+     ls
+     cat <file>
+     help
+     off
+
+     optional:
+     who
+     net
+     ps
+     nmap <params>
+     ext
+  */
+  
+}
+/*
   executeCommand
 
   executeCommand takes in a command and executes it and redirects the output
   of the response so that the output can be sent to the client socket.
 
- */
-char* BDServer :: executeCommand(char* command)
+*/
+void BDServer :: executeCommand(char* command)
 {
   FILE *fp;
   char path[MAX_PATH];
   char *output = (char*)malloc(MAX_PATH * sizeof(char));
-  char *buffer;
-  char *placeholder = output;;
+  char *placeholder = output;
   
   printf("%s\n", command);
 
@@ -128,10 +164,16 @@ char* BDServer :: executeCommand(char* command)
   }
 
   output = placeholder;
-  printf("%s", output);
-  write(_ClientSocket, output, MAX_PATH);
 
-  return output;
+  /* TODO make a parse command function to parse the command, tell user if bad command there - not in execute command. */
+  if(strlen(output) == 0){
+    memcpy(output, command, strlen(command));
+    output += strlen(command) - 1;
+    memcpy(output, ": is not a valid command.\n", 26);
+    output = placeholder;
+  }
+
+  write(_ClientSocket, output, MAX_PATH);
 }
 
 

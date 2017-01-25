@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <iostream>
 #include <netdb.h>
 using namespace std;
 
@@ -36,7 +37,8 @@ private:
 
   void waitForConnection();
   void waitForCommand();
-  char* executeCommand(char* command);
+  void parseCommand(char* command);
+  void executeCommand(char* command);
   void resetConnection();
 };
 
