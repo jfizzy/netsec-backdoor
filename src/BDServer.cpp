@@ -32,7 +32,7 @@ BDServer :: BDServer(int portNo){
 
 /*
   startServer
-  
+
   initializes the server socket then waits for a connection
  */
 void BDServer :: startServer(){
@@ -42,7 +42,7 @@ void BDServer :: startServer(){
   _ServerAddress.sin_port = htons(_PortNo);
   _ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(_ServerAddress.sin_zero, '\0', sizeof _ServerAddress.sin_zero);
-  
+
   bind(_ServerSocket, (struct sockaddr *) &_ServerAddress, sizeof(_ServerAddress));
 
   waitForConnection();
@@ -50,7 +50,7 @@ void BDServer :: startServer(){
 
 void BDServer :: waitForConnection(){
   char buffer[1024];
-  
+
   if (_ServerSocket > 0){
     if(listen(_ServerSocket, 1) == 0){
       printf("Listening\n");
@@ -61,7 +61,7 @@ void BDServer :: waitForConnection(){
     _ClientSocket = accept(_ServerSocket, (struct sockaddr *) &_ServerStorage, &_AddrSize);
 
     printf("Client connected. Handshaking.\n");
-    
+
     strcpy(buffer, "Server: Connected.\n");
     write(_ClientSocket, buffer, 40);
     //once a conncetion has been made, wait for a command
@@ -81,11 +81,12 @@ void BDServer :: waitForCommand()
 {
   int amountRead;
   char buffer[MAX_PATH];
-  
+
   printf("Waiting for command...\n");
   amountRead = read(_ClientSocket, buffer, 255);
   while(amountRead != -1 && amountRead != 0 && strncmp(buffer, "end_session", (int)strlen(buffer) - 1) != 0){
     executeCommand(buffer);
+    memset(buffer, 0, 256);
     printf("Waiting for command...\n");
     amountRead = read(_ClientSocket, buffer, 255);
   }
@@ -107,13 +108,15 @@ char* BDServer :: executeCommand(char* command)
   FILE *fp;
   char path[MAX_PATH];
   char *output = (char*)malloc(MAX_PATH * sizeof(char));
-  
+
   printf("%s\n", command);
 
   fp = popen(command, "r");
   if(fp != NULL){
     while(fgets(path, sizeof(path) -1, fp) != NULL){
       printf("%s", path);
+      write(_ClientSocket, path, MAX_PATH);
+      memset(path, 0, 256);
     }
   }else{
     output[0] = '-';

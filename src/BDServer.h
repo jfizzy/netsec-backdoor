@@ -23,7 +23,7 @@ public:
   void startServer();
   int getPort();
   void setPort(int);
-  
+
 private:
   int _ServerSocket;
   int _ClientSocket;
@@ -32,12 +32,14 @@ private:
   struct sockaddr_in _ServerAddress;
   struct sockaddr_storage _ServerStorage;
   socklen_t _AddrSize;
-  
+
 
   void waitForConnection();
   void waitForCommand();
   char* executeCommand(char* command);
   void resetConnection();
 };
+
+
 
 #endif
