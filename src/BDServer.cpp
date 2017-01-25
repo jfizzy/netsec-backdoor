@@ -90,6 +90,7 @@ void BDServer :: waitForCommand()
 	memcpy(buffer, "Empty command\n", 14);
 	write(_ClientSocket, buffer, 14);
       }catch(const std::exception& e){
+	//client has disconnected
 	break;
       }
     }else if(strncmp(buffer, "off", (int)strlen(buffer) - 1) == 0){
@@ -119,6 +120,8 @@ void BDServer :: parseCommand(char* command){
   /* todo 
      pwd
      cd <dir>
+      - should be handled with system calls instead of popen
+     
      ls
      cat <file>
      help
@@ -130,9 +133,9 @@ void BDServer :: parseCommand(char* command){
      ps
      nmap <params>
      ext
-  */
-  
+  */  
 }
+
 /*
   executeCommand
 
