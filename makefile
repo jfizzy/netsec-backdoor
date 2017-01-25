@@ -10,11 +10,11 @@ all: clean server client
 
 server:
 	@if test -d $(BDIR); then :; else mkdir $(BDIR); fi;
-	$(CC) $(addprefix $(SDIR),$(SERVER_SOURCES)) -o $(BDIR)$(SERVER_TARGET)
+	$(CC) $(OPT) $(addprefix $(SDIR),$(SERVER_SOURCES)) -o $(BDIR)$(SERVER_TARGET)
 
 client:
 	@if test -d $(BDIR); then :; else mkdir $(BDIR); fi;
-	$(CC) $(addprefix $(SDIR),$(CLIENT_SOURCES)) -o $(BDIR)$(CLIENT_TARGET)
+	$(CC) $(OPT) $(addprefix $(SDIR),$(CLIENT_SOURCES)) -o $(BDIR)$(CLIENT_TARGET)
 
 clean:
 	rm -f *.o $(BDIR)*

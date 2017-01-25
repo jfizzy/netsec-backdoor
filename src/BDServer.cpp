@@ -37,7 +37,7 @@ BDServer :: BDServer(int portNo){
  */
 void BDServer :: startServer(){
 
-  _ServerSocket = socket(PF_INET, SOCK_STREAM, 0);
+  _ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
   _ServerAddress.sin_family = AF_INET;
   _ServerAddress.sin_port = htons(_PortNo);
   _ServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -81,7 +81,7 @@ void BDServer :: waitForCommand()
 {
   int amountRead;
   char buffer[MAX_PATH];
-
+  
   printf("Waiting for command...\n");
   amountRead = read(_ClientSocket, buffer, 255);
   while(amountRead != -1 && amountRead != 0 && strncmp(buffer, "end_session", (int)strlen(buffer) - 1) != 0){
@@ -108,14 +108,17 @@ char* BDServer :: executeCommand(char* command)
   FILE *fp;
   char path[MAX_PATH];
   char *output = (char*)malloc(MAX_PATH * sizeof(char));
-
+  char *buffer;
+  char *placeholder = output;;
+  
   printf("%s\n", command);
 
   fp = popen(command, "r");
   if(fp != NULL){
     while(fgets(path, sizeof(path) -1, fp) != NULL){
-      printf("%s", path);
-      write(_ClientSocket, path, MAX_PATH);
+      memcpy(output, path, strlen(path));
+      output += strlen(path);
+      //write(_ClientSocket, path, MAX_PATH);
       memset(path, 0, 256);
     }
   }else{
@@ -123,6 +126,10 @@ char* BDServer :: executeCommand(char* command)
     output[1] = '1';
     output[2] = '\0';
   }
+
+  output = placeholder;
+  printf("%s", output);
+  write(_ClientSocket, output, MAX_PATH);
 
   return output;
 }

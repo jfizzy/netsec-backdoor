@@ -10,9 +10,11 @@ int main(int argc, char* argv[])
 	size_t bufferSize = 1024;
 	size_t amountRead;
 
+	char *userIn;
 	char *buffer;
 
-	buffer = (char *)malloc(bufferSize * sizeof(char)+ 1 * sizeof(char));
+	userIn = (char *)malloc(bufferSize * sizeof(char));
+	buffer = (char *)malloc(bufferSize * sizeof(char));
 
 	printf("Configuration: ip = [%s], port = [%s]\n", argv[1], argv[2]);
 
@@ -45,17 +47,18 @@ int main(int argc, char* argv[])
 	menu(); // print the menu to start
 
 	printf("Enter command: ");
-	amountRead = getline(&buffer, &bufferSize, stdin);
+	amountRead = getline(&userIn, &bufferSize, stdin);
 
-	while (strncmp("off", buffer, (int)strlen(buffer)-1) != 0){
-        write(sockfd, buffer, amountRead);
-				memset(buffer, 0, 1024);
-				n = read(sockfd, buffer, 1023);
-				printf("%s\n", buffer);
-				printf("Enter command: ");
-				memset(buffer, 0, 1024);
-				amountRead = getline(&buffer, &bufferSize, stdin);
-
+	while (strncmp("off", userIn, (int)strlen(buffer)-1) != 0){
+	  write(sockfd, userIn, amountRead);
+	  
+	  memset(buffer, 0, 1024);
+	  n = read(sockfd, buffer, 1023);
+	  printf("%s\n", buffer);
+	  
+	  printf("Enter command: ");
+	  memset(buffer, 0, 1024);
+	  amountRead = getline(&userIn, &bufferSize, stdin);
 	}
 
 	write(sockfd, buffer, amountRead);
