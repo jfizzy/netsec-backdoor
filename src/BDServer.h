@@ -40,6 +40,10 @@ private:
   void parseCommand(char* command);
   void executeCommand(char* command);
   void resetConnection();
+
+  void trimLeft(char *input, int length);
+  void trimRight(char *input, int length);
+  bool contains(char *input, char ch);
 };
 
 

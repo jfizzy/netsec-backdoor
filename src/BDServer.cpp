@@ -98,7 +98,8 @@ void BDServer :: waitForCommand()
       write(_ClientSocket, buffer, 14);
       return;
     }else{
-      executeCommand(buffer);
+      //executeCommand(buffer);
+      parseCommand(buffer);
       printf("Waiting for command...\n");
     }
     memset(buffer, 0, MAX_PATH);
@@ -133,7 +134,30 @@ void BDServer :: parseCommand(char* command){
      ps
      nmap <params>
      ext
-  */  
+  */
+  trimLeft(command, strlen(command));
+  trimRight(command, strlen(command));
+
+  printf("%s\n", strtok(command, " "));
+
+  if(strtok(command, " ") == NULL){
+    printf("Good\n");
+  }
+  /*
+  char *function;
+  function = strtok(command, " ");
+  printf("%s\n", function);
+
+  if(strcmp(function, "cd\n") == 0){
+    printf("You told me to cd huehhueheuheue\n");
+  }else if(strncmp(function, "ls", 2)){
+    printf("%s\n", strtok(command, " "));
+    printf("LS with no arguments huehuheuheu\n");
+  }else{
+    printf("Command: %s, Length: %d\n", function, strlen(function));
+  }
+
+  */
 }
 
 /*
@@ -196,4 +220,39 @@ void BDServer :: setPort(int port){
 
 int BDServer :: getPort(){
   return _PortNo;
+}
+
+void BDServer :: trimLeft(char *input, int length){
+  int index = 0, i = 0;
+
+  while(index < length && (input[index] == ' ' || input[index] == '\n' || input[index] == '\t')){
+    index ++;
+  }
+
+  while(i + index < length){
+    input[i] = input[i + index];
+    i++;
+  }
+
+  input[i] = '\0';
+}
+
+void BDServer :: trimRight(char *input, int length){
+  int index = length - 1;
+  
+  while(index > 0 && (input[index] == ' ' || input[index] == '\n' || input[index] == '\t')){
+    input[index] = '\0';
+    index --; 
+  }
+}
+
+bool BDServer :: contains(char *input, char ch){
+  int i = 0;
+  bool found = false;
+  while(i < strlen(input) && !found){
+    if(input[i] == ch)
+      found = true;
+  }
+
+  return found;
 }
