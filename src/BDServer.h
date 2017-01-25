@@ -15,6 +15,8 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <netdb.h>
+#include <errno.h>
+
 using namespace std;
 
 class BDServer{
@@ -39,6 +41,7 @@ private:
   void waitForCommand();
   void parseCommand(char* command);
   void executeCommand(char* command);
+  void changeDirectory(char* command);
   void resetConnection();
 
   void trimLeft(char *input, int length);

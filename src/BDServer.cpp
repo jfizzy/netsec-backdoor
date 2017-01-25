@@ -121,7 +121,7 @@ void BDServer :: parseCommand(char* command){
   /* todo 
      pwd
      cd <dir>
-      - should be handled with system calls instead of popen
+     - should be handled with system calls instead of popen
      
      ls
      cat <file>
@@ -135,34 +135,39 @@ void BDServer :: parseCommand(char* command){
      nmap <params>
      ext
   */
+  char* function;
+  char* arguments;
+  
   trimLeft(command, strlen(command));
   trimRight(command, strlen(command));
 
-  printf("%s\n", strtok(command, " "));
-
-  if(strtok(command, " ") == NULL){
-    printf("Good\n");
-  }
-  /*
-  char *function;
-  function = strtok(command, " ");
-  printf("%s\n", function);
-
-  if(strcmp(function, "cd\n") == 0){
-    printf("You told me to cd huehhueheuheue\n");
-  }else if(strncmp(function, "ls", 2)){
-    printf("%s\n", strtok(command, " "));
-    printf("LS with no arguments huehuheuheu\n");
+  //extract function - first characters up to space or tab
+  function = strtok(command, " \t");
+  arguments = strtok(NULL, " \t");
+  
+  //if next strtok read on NULL is NULL then there are no arguments (nothing following function)
+  if(arguments == NULL){
+    if(strcmp(function, "cd") == 0){
+      //cd with no arguments, switch to home directory
+      printf("cd no arguments\n");
+    }else if(strcmp(function, "ls") == 0){
+      //ls with no
+      printf("ls no arguments\n");
+    }else{
+      printf("other command, no arguments\n");
+    }
   }else{
-    printf("Command: %s, Length: %d\n", function, strlen(function));
+    if(strcmp(function, "cd") == 0){
+      printf("cd with arguments\n");
+    }else{
+      printf("other command with arguments\n");
+    }
   }
-
-  */
 }
 
 /*
   executeCommand
-
+    
   executeCommand takes in a command and executes it and redirects the output
   of the response so that the output can be sent to the client socket.
 
@@ -201,6 +206,11 @@ void BDServer :: executeCommand(char* command)
   }
 
   write(_ClientSocket, output, MAX_PATH);
+}
+
+
+void BDServer :: changeDirectory(char *directory){
+  int ret = chdir(directory);
 }
 
 
