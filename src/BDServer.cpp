@@ -82,10 +82,8 @@ void BDServer :: waitForCommand()
   int amountRead;
   char buffer[MAX_PATH];
 
-  printf("Waiting for command...\n");
-  memcpy(buffer, "-----------------------------------------------\n>> \0", 53);
-  write(_ClientSocket, buffer, 53);
-  memset(buffer, 0, MAX_PATH);
+  terminalLine();
+  
   amountRead = read(_ClientSocket, buffer, MAX_PATH);
   while(amountRead > 0){
     trimLeft(buffer, strlen(buffer));
@@ -94,6 +92,7 @@ void BDServer :: waitForCommand()
       try{
 	memcpy(buffer, "Empty command\n", 14);
 	write(_ClientSocket, buffer, 14);
+	memset(buffer, 0, MAX_PATH);
       }catch(const std::exception& e){
 	//client has disconnected
 	break;
@@ -107,12 +106,11 @@ void BDServer :: waitForCommand()
     }else{
       //executeCommand(buffer);
       parseCommand(buffer);
+      memset(buffer, 0, MAX_PATH);
       printf("Waiting for command...\n");
     }
     
-    memcpy(buffer, "\n-----------------------------------------------\n>> \0", 55);
-    write(_ClientSocket, buffer, 55);
-    memset(buffer, 0, MAX_PATH);
+    terminalLine();
    
     amountRead = read(_ClientSocket, buffer, MAX_PATH);
   }
@@ -120,6 +118,18 @@ void BDServer :: waitForCommand()
   printf("Client disconnected. Resetting client socket.\n");
   resetConnection();
   waitForConnection();
+}
+
+void BDServer :: terminalLine(){
+  char buffer[MAX_PATH];
+  memcpy(buffer, "\n-----------------------------------------------\n\0", 51);
+  write(_ClientSocket, buffer, 51);
+  
+  printDirectoryStats();
+  
+  memcpy(buffer, ">> \0", 4);
+  write(_ClientSocket, buffer, 4);
+  memset(buffer, 0, MAX_PATH);
 }
 
 /*
@@ -131,13 +141,15 @@ void BDServer :: waitForCommand()
 void BDServer :: parseCommand(char* command){
   char* cpy;
   char* function;
-  char* arguments;
-
+  //ensures that arguments gets null terminated
+  char* arguments = (char*)calloc(1024, 1);
+  free(arguments);
+  
   trimLeft(command, strlen(command));
   trimRight(command, strlen(command));
 
   //strtok modifies the past in string - make a copy.
-  cpy = (char*)malloc(strlen(command));
+  cpy = (char*)calloc(strlen(command), 1);
   memcpy(cpy, command, strlen(command));
   
   //extract function - first characters up to space or tab
@@ -151,7 +163,8 @@ void BDServer :: parseCommand(char* command){
   if(arguments == NULL){
     if(strcmp(function, "cd") == 0){
       //cd with no arguments, switch to home directory
-      printf("cd no arguments\n");
+      memcpy(cpy, getenv("HOME"), strlen(getenv("HOME")));
+      changeDirectory(cpy);
     }else if(strcmp(function, "ls") == 0){
       //ls with no
       printf("ls no arguments\n");
@@ -222,9 +235,10 @@ void BDServer :: executeCommand(char* command)
 {
   FILE *fp;
   char path[MAX_PATH];
-  char *output = (char*)malloc(MAX_PATH * sizeof(char));
+  char *output = (char*)malloc(MAX_PATH);
   char *placeholder = output;
-
+  int totalSize = 0;
+  
   printf("%s\n", command);
 
   fp = popen(command, "r");
@@ -232,19 +246,21 @@ void BDServer :: executeCommand(char* command)
     while(fgets(path, sizeof(path), fp) != NULL){
       printf("%s\n", path);
       memcpy(output, path, strlen(path));
+      totalSize += strlen(path) + 1;
       output += strlen(path) + 1;
-      //write(_ClientSocket, path, MAX_PATH);
       memset(path, 0, MAX_PATH);
     }
+    totalSize -= (strlen(path) + 1);
   }else{
     printf("Bad command\n");
   }
   
+  output[0] = '\0';
   output = placeholder;
   
   fclose(fp);
   
-  write(_ClientSocket, output, MAX_PATH);
+  write(_ClientSocket, output, totalSize);
   memset(output, 0, MAX_PATH);
   free(output);
 }
@@ -294,13 +310,33 @@ void BDServer :: printWorkingDirectory(){
   }
 }
 
+/*
+
+ */
+void BDServer :: printDirectoryStats(){
+  char dir[1024];
+  char *buffer = (char*)malloc(1029);
+  char *placeholder = buffer;
+  printf("%d\n", sizeof(dir));
+  if (getcwd(dir, sizeof(dir)) != NULL){
+    memcpy(buffer, "@[", 2);
+    buffer += 2;
+    memcpy(buffer, dir, strlen(dir));
+    buffer += strlen(dir);
+    memcpy(buffer, "]\n\0", 3);
+    buffer = placeholder;
+    write(_ClientSocket, buffer, strlen(dir) + 5);
+  }
+
+  free(buffer);
+}
+
 void BDServer :: changeDirectory(char *directory){
   int ret = chdir(directory);
+  printf("%s\n", directory);
   char buffer[1024] = "Bad directory\n\0";
   if (ret == -1){
     write(_ClientSocket, buffer, strlen(buffer));
-  }else{
-    printWorkingDirectory();    
   }
 }
 

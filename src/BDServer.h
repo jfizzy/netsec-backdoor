@@ -47,6 +47,8 @@ private:
   void resetConnection();
   void badFunction(char *command);
   void printWorkingDirectory();
+  void printDirectoryStats();
+  void terminalLine();
 
   void trimLeft(char *input, int length);
   void trimRight(char *input, int length);
