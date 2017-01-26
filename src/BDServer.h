@@ -41,6 +41,7 @@ private:
   void waitForCommand();
   void parseCommand(char* command);
   void executeCommand(char* command);
+  void helpMenu();
   void changeDirectory(char* command);
   void resetConnection();
 

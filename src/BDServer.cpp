@@ -84,8 +84,10 @@ void BDServer :: waitForCommand()
   
   printf("Waiting for command...\n");
   amountRead = read(_ClientSocket, buffer, MAX_PATH);
-  while(amountRead > 0){    
-    if (amountRead == 1){
+  while(amountRead > 0){
+    trimLeft(buffer, strlen(buffer));
+    trimRight(buffer, strlen(buffer));
+    if (amountRead == 0){
       try{
 	memcpy(buffer, "Empty command\n", 14);
 	write(_ClientSocket, buffer, 14);
@@ -93,10 +95,12 @@ void BDServer :: waitForCommand()
 	//client has disconnected
 	break;
       }
-    }else if(strncmp(buffer, "off", (int)strlen(buffer) - 1) == 0){
+    }else if(strncmp(buffer, "off", strlen(buffer)) == 0){
       memcpy(buffer, "Shutting down.\n", 15);
       write(_ClientSocket, buffer, 14);
       return;
+    }else if(strncmp(buffer, "help", strlen(buffer)) == 0){
+      helpMenu();
     }else{
       //executeCommand(buffer);
       parseCommand(buffer);
@@ -208,6 +212,9 @@ void BDServer :: executeCommand(char* command)
   write(_ClientSocket, output, MAX_PATH);
 }
 
+void BDServer :: helpMenu(){
+  printf("Help!\n");
+}
 
 void BDServer :: changeDirectory(char *directory){
   int ret = chdir(directory);
