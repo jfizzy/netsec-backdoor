@@ -16,6 +16,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <errno.h>
+#include <sstream>
 
 using namespace std;
 
@@ -44,6 +45,8 @@ private:
   void helpMenu();
   void changeDirectory(char* command);
   void resetConnection();
+  void badFunction(char *command);
+  void printWorkingDirectory();
 
   void trimLeft(char *input, int length);
   void trimRight(char *input, int length);
