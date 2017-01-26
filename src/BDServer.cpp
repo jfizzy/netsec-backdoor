@@ -171,7 +171,7 @@ void BDServer :: parseCommand(char* command){
     }
   }else{
     if(strcmp(function, "cd") == 0){
-      printf("cd with arguments\n");
+      changeDirectory(arguments);
     }else if (strcmp(function, "ls") == 0){
       executeCommand(command);
     }else if (strcmp(function, "cat") == 0){
@@ -192,6 +192,8 @@ void BDServer :: parseCommand(char* command){
       badFunction(command);
     }  
   }
+
+  free(cpy);
 }
 
 void BDServer :: badFunction(char *command)
@@ -203,6 +205,8 @@ void BDServer :: badFunction(char *command)
   output += strlen(command);
   memcpy(output, ": is not a valid command.\n", 26);
   output = placeholder;
+
+  free(output);
 }
 
 
@@ -226,23 +230,23 @@ void BDServer :: executeCommand(char* command)
   fp = popen(command, "r");
   if(fp != NULL){
     while(fgets(path, sizeof(path), fp) != NULL){
+      printf("%s\n", path);
       memcpy(output, path, strlen(path));
-      output += strlen(path);
+      output += strlen(path) + 1;
       //write(_ClientSocket, path, MAX_PATH);
       memset(path, 0, MAX_PATH);
     }
   }else{
     printf("Bad command\n");
-    output[0] = '-';
-    output[1] = '1';
-    output[2] = '\0';
   }
-
+  
   output = placeholder;
   
   fclose(fp);
   
   write(_ClientSocket, output, MAX_PATH);
+  memset(output, 0, MAX_PATH);
+  free(output);
 }
 
 void BDServer :: helpMenu(){
@@ -292,6 +296,12 @@ void BDServer :: printWorkingDirectory(){
 
 void BDServer :: changeDirectory(char *directory){
   int ret = chdir(directory);
+  char buffer[1024] = "Bad directory\n\0";
+  if (ret == -1){
+    write(_ClientSocket, buffer, strlen(buffer));
+  }else{
+    printWorkingDirectory();    
+  }
 }
 
 
