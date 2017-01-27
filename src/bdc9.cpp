@@ -1,3 +1,10 @@
+/*	
+	main for backdoor program
+	Authors: Tyrone Lagore (10151950) and James MacIsaac (10063078)
+	Contact: tyrone.lagore@ucalgary.ca  james.macisaac@ucalgary.ca
+	Tutorial: Tyrone-T01 James-T03
+*/
+
 #include <string>
 #include <iostream>
 using namespace std;
@@ -21,17 +28,6 @@ int main(int argc, char *argv[])
       cout << "Error in " << e.what();
     }
   }
-  //maintains socket read/write information
-  /*char ioBuffer[1024];
-  //holds socket addresses
-  struct sockaddr_in serverAddress, clientAddress;
-  int socketFd,
-    acceptSockFd,
-    portNo,
-    ioRead;
-
-  
-  */
 }
 
 void error(const char *errorMessage){

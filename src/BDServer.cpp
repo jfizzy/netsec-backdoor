@@ -1,8 +1,9 @@
-
-
-
-
-
+/*	
+	BDServer.cpp
+	Authors: Tyrone Lagore (10151950) and James MacIsaac (10063078)
+	Contact: tyrone.lagore@ucalgary.ca  james.macisaac@ucalgary.ca
+	Tutorial: Tyrone-T01 James-T03
+*/
 #include "BDServer.h"
 
 /*

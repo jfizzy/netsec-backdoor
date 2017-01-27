@@ -1,3 +1,8 @@
+#	Makefile for backdoor program
+#	Authors: Tyrone Lagore (10151950) and James MacIsaac (10063078)
+#	Contact: tyrone.lagore@ucalgary.ca  james.macisaac@ucalgary.ca
+#	Tutorial: Tyrone-T01 James-T03
+
 CC=g++
 SERVER_TARGET=bds9
 SERVER_SOURCES=bdc9.cpp BDServer.cpp

@@ -1,5 +1,9 @@
-/* bd_server.h  */
-
+/*	
+	BDServer.h
+	Authors: Tyrone Lagore (10151950) and James MacIsaac (10063078)
+	Contact: tyrone.lagore@ucalgary.ca  james.macisaac@ucalgary.ca
+	Tutorial: Tyrone-T01 James-T03
+*/
 #ifndef BD_SERVER_H
 #define BD_SERVER_H
 
@@ -20,6 +24,18 @@
 
 using namespace std;
 
+
+/*
+  BDServer
+  
+  The BDServer class initializes a server socket on a specified port and then waits for connections.
+  When a client connects, the server allows the client to send a specific variety of commands, which
+  the server will then execute on the users behalf on the running computer.
+
+  If a port is not specified, or the port number is out of the range of available ports, the server
+  will initialize on a default port number of 2737
+
+ */
 class BDServer{
 public:
   BDServer();
