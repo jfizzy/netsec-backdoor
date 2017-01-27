@@ -127,16 +127,16 @@ void BDServer :: waitForCommand()
     }else{
       printf("before: %s\n", buffer);
       write(_ClientSocket, "-----------------------------------------------\n", 49);
-      //executeCommand(buffer);
       printf("after: %s\n", buffer);
       parseCommand(buffer);
       memset(buffer, 0, MAX_PATH);
       
       printf("Waiting for command...\n");
     }
-    
+
+    memset(buffer, 0, MAX_PATH);
     terminalLine();
-   
+    
     amountRead = read(_ClientSocket, buffer, MAX_PATH);
   }
 
@@ -232,8 +232,8 @@ void BDServer :: parseCommand(char* command){
       memcpy(cpy, getenv("HOME"), strlen(getenv("HOME")));
       changeDirectory(cpy);
     }else if(strcmp(function, "ls") == 0){
-      //ls with no args
-      printf("ls no arguments\n");
+      memcpy(cpy, "ls\0",3);
+      executeCommand(cpy);
     }else if(strcmp(function, "ll") == 0){
       memcpy(cpy, "ls -FGlAihp\0", 12);
       executeCommand(cpy);
