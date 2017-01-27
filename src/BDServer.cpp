@@ -226,7 +226,6 @@ void BDServer :: parseCommand(char* command){
   //if next strtok read on NULL is NULL then there are no arguments (nothing following function)
   if(arguments == NULL){
     if(strcmp(function, "cd") == 0){
-      printf("GOT HERE DUDE");
       //cd with no arguments, switch to home directory
       memcpy(cpy, getenv("HOME"), strlen(getenv("HOME")));
       changeDirectory(cpy);
