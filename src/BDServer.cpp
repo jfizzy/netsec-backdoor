@@ -105,6 +105,7 @@ void BDServer :: waitForCommand()
   while(amountRead > 0){
     trimLeft(buffer, strlen(buffer));
     trimRight(buffer, strlen(buffer));
+    printf("<< %s\n", buffer);
     if (amountRead == 1){
       try{
 	write(_ClientSocket, "-----------------------------------------------\n", 49);
@@ -133,7 +134,7 @@ void BDServer :: waitForCommand()
     }
 
     memset(buffer, 0, MAX_PATH);
-     printf("$$ Waiting for command...\n");
+    printf("$$ Waiting for command...\n");
     terminalLine();
     
     amountRead = read(_ClientSocket, buffer, MAX_PATH);
@@ -196,7 +197,7 @@ void BDServer :: terminalLine(){
   ps [params]						- show currently running processes
   kill <params> 					- runs kill command with given parameters
   nmap <params>						- run nmap with <params>
-  netstat					- Display routing table
+  netstat					        - Display routing table
   chmod <permissions> <file>				- change <file> accessibility to <permissions>
 
   Any of the above where the parameters are in angle brackets <params>, the parameters are required.
@@ -224,6 +225,7 @@ void BDServer :: parseCommand(char* command){
   //if next strtok read on NULL is NULL then there are no arguments (nothing following function)
   if(arguments == NULL){
     if(strcmp(function, "cd") == 0){
+      printf("GOT HERE DUDE");
       //cd with no arguments, switch to home directory
       memcpy(cpy, getenv("HOME"), strlen(getenv("HOME")));
       changeDirectory(cpy);
@@ -297,7 +299,8 @@ void BDServer :: badFunction(char *command)
   
   memcpy(output, command, strlen(command));
   output += strlen(command);
-  memcpy(output, ": Invalid Command\n\0", 19);
+  printf("$$ Invalid command.\n");
+  memcpy(output, ": Invalid Command\n\0", 18);
   output = placeholder;
 
   write(_ClientSocket, output, strlen(output) - 1); 
@@ -326,8 +329,6 @@ void BDServer :: executeCommand(char* command)
   char *output = (char*)malloc(MAX_PATH);
   char *placeholder = output;
   int totalSize = 0;
-  
-  printf("<< %s\n", command);
 
   fp = popen(command, "r");
   if(fp != NULL){
@@ -359,7 +360,6 @@ void BDServer :: executeCommand(char* command)
   Displays a neatly formatted menu to the screen for the client to view all possible commands
  */
 void BDServer :: helpMenu(){
-  printf("$$ Printing help menu.\n");
   char buffer[MAX_PATH] = "arguments: [] - optional, <> - required\n"
     "-----------------------------------------------\n"
     "pwd		                - print working directory\n"
@@ -370,7 +370,7 @@ void BDServer :: helpMenu(){
     "who				- list currently logged in users\n"
     "os                              - display OS related Information\n"
     "net				- show network configuration information\n"
-    "ps			       	- show currently running processes\n"
+    "ps [params]		        - show currently running processes\n"
     "kill -9 <pid>			- kill process with id <pid>\n"
     "nmap <params>			- run nmap with <params>\n"
     "netstat		                - Display routing table\n"
@@ -394,8 +394,8 @@ void BDServer :: printWorkingDirectory(){
     write(_ClientSocket, dir, strlen(dir));
   }else{
     printf("$$ Not a directory.\n");
-    memcpy(dir, "Not a directory\n", 16);
-    write(_ClientSocket, dir, 16);
+    memcpy(dir, "$$ Not a directory\n", 19);
+    write(_ClientSocket, dir, 19);
   }
 }
 
@@ -432,7 +432,6 @@ void BDServer :: printDirectoryStats(){
  */
 void BDServer :: changeDirectory(char *directory){
   int ret = chdir(directory);
-  printf("$$ %s\n", directory);
   char buffer[1024] = "Not a valid directory\n\0";
   if (ret == -1){
     write(_ClientSocket, buffer, strlen(buffer));

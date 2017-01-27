@@ -4,7 +4,7 @@
 #define BD_SERVER_H
 
 #define DEFAULT_PORTNO 2737
-#define MAX_PATH 32768
+#define MAX_PATH 131072
 
 #include <stdio.h>
 #include <stdlib.h>
