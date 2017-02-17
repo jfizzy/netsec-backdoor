@@ -1,4 +1,4 @@
-## cpsc_526_assignment1 ##
+## netsec backdoor ##
 
 ## Authors ##
 Tyrone Lagore and James MacIsaac
